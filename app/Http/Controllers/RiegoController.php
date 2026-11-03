@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RiegoRequest;
-use App\Models\Parcela;
 use App\Models\Riego;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,14 +10,9 @@ use Illuminate\View\View;
 
 class RiegoController extends Controller
 {
-    private function parcelasDe(Request $request)
-    {
-        return Parcela::visiblesPara($request->user())->orderBy('nombre')->get();
-    }
-
     public function index(Request $request): View
     {
-        $filtros = $request->only(['fecha', 'parcela_id']);
+        $filtros = $request->only(['fecha']);
 
         $riegos = Riego::visiblesPara($request->user())
             ->with('parcela')
@@ -30,22 +24,20 @@ class RiegoController extends Controller
 
         return view('riegos.index', [
             'riegos' => $riegos,
-            'parcelas' => $this->parcelasDe($request),
             'filtros' => $filtros,
         ]);
     }
 
-    public function create(Request $request): View
+    public function create(): View
     {
         return view('riegos.form', [
             'riego' => new Riego(['fecha' => now()->toDateString()]),
-            'parcelas' => $this->parcelasDe($request),
         ]);
     }
 
     public function store(RiegoRequest $request): RedirectResponse
     {
-        $riego = Riego::create($request->validated());
+        $riego = $request->user()->parcelaPrincipal()->riegos()->create($request->validated());
         $riego->generarAlerta();
 
         return redirect()->route('riegos.index')->with('ok', 'Riego guardado correctamente.');
@@ -57,7 +49,6 @@ class RiegoController extends Controller
 
         return view('riegos.form', [
             'riego' => $riego,
-            'parcelas' => $this->parcelasDe($request),
         ]);
     }
 

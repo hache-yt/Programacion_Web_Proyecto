@@ -43,14 +43,23 @@ class RiegoTest extends TestCase
         ], $cambios);
     }
 
-    public function test_guarda_un_riego_valido(): void
+    public function test_guarda_un_riego_valido_en_la_parcela_principal(): void
     {
-        $parcela = $this->crearParcela();
+        $principal = $this->crearParcela();
+        $historica = $this->crearParcela(null, 'Parcela histórica');
 
-        $this->post('/riegos', $this->datosRiego($parcela))->assertRedirect(route('riegos.index'));
+        $this->post('/riegos', $this->datosRiego($historica))->assertRedirect(route('riegos.index'));
 
-        $this->assertDatabaseHas('riegos', ['parcela_id' => $parcela->id, 'duracion_min' => 30]);
+        $this->assertDatabaseHas('riegos', ['parcela_id' => $principal->id, 'duracion_min' => 30]);
         $this->assertDatabaseCount('alertas', 0);
+    }
+
+    public function test_formulario_de_riego_no_muestra_selector_de_parcela(): void
+    {
+        $this->get('/riegos/create')
+            ->assertOk()
+            ->assertDontSee('parcela_id')
+            ->assertDontSee('Selecciona una parcela');
     }
 
     public function test_rechaza_fecha_futura(): void
@@ -71,25 +80,20 @@ class RiegoTest extends TestCase
             ->assertSessionHasErrors(['duracion_min', 'cantidad_litros']);
     }
 
-    public function test_no_permite_registrar_riego_en_parcela_ajena(): void
-    {
-        $ajena = $this->crearParcela(User::factory()->create(), 'Ajena');
-
-        $this->post('/riegos', $this->datosRiego($ajena))->assertSessionHasErrors('parcela_id');
-        $this->assertDatabaseCount('riegos', 0);
-    }
-
-    public function test_historial_filtra_por_parcela(): void
+    public function test_historial_conserva_registros_historicos_y_filtra_por_fecha(): void
     {
         $a = $this->crearParcela(null, 'Parcela A');
         $b = $this->crearParcela(null, 'Parcela B');
-        Riego::create($this->datosRiego($a, ['observaciones' => 'riego-a']));
-        Riego::create($this->datosRiego($b, ['observaciones' => 'riego-b']));
+        Riego::create($this->datosRiego($a, ['observaciones' => 'riego-a', 'fecha' => now()->toDateString()]));
+        Riego::create($this->datosRiego($b, ['observaciones' => 'riego-b', 'fecha' => now()->subDay()->toDateString()]));
 
-        $this->get('/riegos?parcela_id='.$a->id)
+        $this->get('/riegos?fecha='.now()->toDateString())
             ->assertOk()
             ->assertSee('riego-a')
             ->assertDontSee('riego-b');
+
+        $this->assertDatabaseCount('riegos', 2);
+        $this->get('/riegos')->assertSee('riego-a')->assertSee('riego-b');
     }
 
     public function test_usuario_no_ve_ni_edita_riegos_ajenos(): void
@@ -129,43 +133,54 @@ class RiegoTest extends TestCase
 
     public function test_actualiza_y_elimina_un_riego(): void
     {
-        $parcela = $this->crearParcela();
-        $riego = Riego::create($this->datosRiego($parcela));
+        $principal = $this->crearParcela();
+        $historica = $this->crearParcela(null, 'Parcela histórica');
+        $riego = Riego::create($this->datosRiego($historica));
 
-        $this->put('/riegos/'.$riego->id, $this->datosRiego($parcela, ['duracion_min' => 50]))
+        $this->put('/riegos/'.$riego->id, $this->datosRiego($principal, ['duracion_min' => 50]))
             ->assertRedirect(route('riegos.index'));
-        $this->assertDatabaseHas('riegos', ['id' => $riego->id, 'duracion_min' => 50]);
+        $this->assertDatabaseHas('riegos', [
+            'id' => $riego->id,
+            'duracion_min' => 50,
+            'parcela_id' => $historica->id,
+        ]);
 
         $this->delete('/riegos/'.$riego->id)->assertRedirect(route('riegos.index'));
         $this->assertDatabaseMissing('riegos', ['id' => $riego->id]);
     }
 
-    public function test_crud_de_parcelas_con_propietario(): void
+    public function test_la_interfaz_muestra_una_parcela_y_no_expone_gestion_multiple(): void
     {
-        $this->post('/parcelas', ['nombre' => 'Área verde Plaza', 'area_m2' => 400])
-            ->assertRedirect(route('parcelas.index'));
-        $parcela = Parcela::firstOrFail();
-        $this->assertSame($this->usuario->id, $parcela->usuario_id);
+        $principal = $this->crearParcela(null, 'Parcela principal existente');
+        $historica = $this->crearParcela(null, 'Parcela histórica');
+        $riego = Riego::create($this->datosRiego($historica));
 
-        $this->put('/parcelas/'.$parcela->id, ['nombre' => 'Plaza Central'])
-            ->assertRedirect(route('parcelas.index'));
-        $this->assertDatabaseHas('parcelas', ['nombre' => 'Plaza Central']);
+        $this->get('/parcelas')
+            ->assertOk()
+            ->assertSee('Parcela principal existente')
+            ->assertDontSee('Parcela histórica')
+            ->assertDontSee('Nueva parcela');
 
-        $this->delete('/parcelas/'.$parcela->id)->assertRedirect(route('parcelas.index'));
-        $this->assertDatabaseCount('parcelas', 0);
+        $this->post('/parcelas')->assertStatus(405);
+        $this->get('/parcelas/create')->assertNotFound();
+        $this->put('/parcelas/'.$principal->id)->assertNotFound();
+        $this->delete('/parcelas/'.$principal->id)->assertNotFound();
+        $this->assertDatabaseHas('parcelas', ['id' => $principal->id]);
+        $this->assertDatabaseHas('parcelas', ['id' => $historica->id]);
+        $this->assertDatabaseHas('riegos', ['id' => $riego->id, 'parcela_id' => $historica->id]);
     }
 
-    public function test_parcela_ajena_no_se_edita(): void
+    public function test_admin_ve_solo_la_parcela_principal_de_cada_cuenta(): void
     {
-        $ajena = $this->crearParcela(User::factory()->create(), 'Ajena');
+        $otro = User::factory()->create();
+        $this->crearParcela($otro, 'Principal de otro usuario');
+        $this->crearParcela($otro, 'Parcela histórica de otro usuario');
 
-        $this->get('/parcelas/'.$ajena->id.'/edit')->assertForbidden();
-        $this->delete('/parcelas/'.$ajena->id)->assertForbidden();
-    }
-
-    public function test_parcela_requiere_nombre(): void
-    {
-        $this->post('/parcelas', ['nombre' => ''])->assertSessionHasErrors('nombre');
+        $this->actingAs(User::factory()->create(['rol' => 'administrador']))
+            ->get('/parcelas')
+            ->assertOk()
+            ->assertSee('Principal de otro usuario')
+            ->assertDontSee('Parcela histórica de otro usuario');
     }
 
     public function test_estadisticas_y_alertas_se_muestran(): void
@@ -173,7 +188,7 @@ class RiegoTest extends TestCase
         $parcela = $this->crearParcela();
         Riego::create($this->datosRiego($parcela));
 
-        $this->get('/estadisticas')->assertOk()->assertSee('Litros por día');
+        $this->get('/estadisticas')->assertOk()->assertSee('Consumo diario');
         $this->get('/alertas')->assertOk();
         $this->get('/')->assertOk()->assertSee('Riegos registrados');
     }

@@ -16,6 +16,10 @@ Laravel 12, PHP 8.2 o superior, MySQL (XAMPP).
 
 Si aparece un error indicando que no existe `vendor/autoload.php`, ejecuta `instalar.bat` desde la carpeta del proyecto para instalar las dependencias.
 
+## Parcela principal
+
+Cada cuenta trabaja con una parcela principal: los nuevos riegos se vinculan automáticamente a ella y ya no se ofrecen opciones para crear, cambiar o eliminar parcelas. Los registros y las relaciones históricas existentes se conservan; no se ejecuta una migración que los elimine o reasigne.
+
 ## Cuentas de prueba
 
 - Administrador: admin@riego.test / admin1234
@@ -23,7 +27,7 @@ Si aparece un error indicando que no existe `vendor/autoload.php`, ejecuta `inst
 
 ## Pruebas
 
-`php artisan test`
+`php artisan test tests/Feature`
 
 ## Estructura
 
@@ -33,5 +37,5 @@ Si aparece un error indicando que no existe `vendor/autoload.php`, ejecuta `inst
 - `app/Http/Requests`: validación en servidor
 - `database/migrations` y `database/seeders`
 - `resources/views`: vistas Blade
-- `public/css/styles.css`, `public/js/validaciones.js`, `public/js/graficos.js`
+- `public/css/styles.css`, `public/js/validaciones.js`, `public/js/graficos.js`, `public/js/interacciones.js`
 - `tests/Feature`

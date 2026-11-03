@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const reglas = {
-    parcela_id: (valor) => (valor === '' ? 'Selecciona una parcela.' : ''),
     fecha: (valor) => {
       if (valor === '') {
         return 'Ingresa la fecha.';

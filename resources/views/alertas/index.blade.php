@@ -1,23 +1,19 @@
 @extends('layouts.app')
 @section('titulo', 'Alertas')
 @section('contenido')
-<h1>Alertas de consumo elevado</h1>
+<div class="page-heading">
+<div><p class="eyebrow">Atención al consumo</p><h1>Alertas</h1><p>Revisa los registros que superaron el umbral de consumo.</p></div>
+</div>
+<div class="panel tabla-panel">
 <div class="tabla-scroll">
 <table>
-<thead>
-<tr>
-<th>Fecha</th>
-<th>Mensaje</th>
-<th>Estado</th>
-<th>Acciones</th>
-</tr>
-</thead>
+<thead><tr><th>Fecha</th><th>Detalle</th><th>Estado</th><th>Acciones</th></tr></thead>
 <tbody>
 @forelse ($alertas as $alerta)
 <tr>
-<td>{{ $alerta->created_at->format('Y-m-d H:i') }}</td>
+<td><strong>{{ $alerta->created_at->format('d/m/Y') }}</strong><br><span class="tarjeta-detalle">{{ $alerta->created_at->format('H:i') }}</span></td>
 <td>{{ $alerta->mensaje }}</td>
-<td @class(['alto' => $alerta->estado === 'pendiente'])>{{ ucfirst($alerta->estado) }}</td>
+<td><span @class(['etiqueta', 'etiqueta-pendiente' => $alerta->estado === 'pendiente', 'etiqueta-atendida' => $alerta->estado !== 'pendiente'])>{{ ucfirst($alerta->estado) }}</span></td>
 <td class="acciones">
 @if ($alerta->estado === 'pendiente')
 <form method="POST" action="{{ route('alertas.update', $alerta) }}">
@@ -26,7 +22,7 @@
 <button class="enlace" type="submit">Marcar atendida</button>
 </form>
 @endif
-<form method="POST" action="{{ route('alertas.destroy', $alerta) }}" onsubmit="return confirm('¿Eliminar esta alerta?')">
+<form method="POST" action="{{ route('alertas.destroy', $alerta) }}" data-confirm="¿Eliminar esta alerta?" data-confirm-title="Eliminar alerta">
 @csrf
 @method('DELETE')
 <button class="enlace" type="submit">Eliminar</button>
@@ -34,9 +30,10 @@
 </td>
 </tr>
 @empty
-<tr><td colspan="4">No hay alertas registradas.</td></tr>
+<tr><td class="vacio" colspan="4"><span class="vacio-icono" aria-hidden="true">✓</span><strong>No hay alertas registradas</strong>Cuando haya un consumo elevado, lo verás aquí.</td></tr>
 @endforelse
 </tbody>
 </table>
+</div>
 </div>
 @endsection

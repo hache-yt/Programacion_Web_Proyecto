@@ -23,31 +23,24 @@ class DatabaseSeeder extends Seeder
             'rol' => 'usuario',
         ]);
 
-        $saylla = $demo->parcelas()->create([
+        $parcela = $demo->parcelas()->create([
             'nombre' => 'Parcela Saylla 1',
             'ubicacion' => 'Saylla, Cusco',
             'area_m2' => 1200,
             'tipo_cultivo' => 'Maíz',
         ]);
 
-        $plaza = $demo->parcelas()->create([
-            'nombre' => 'Área verde Plaza',
-            'ubicacion' => 'Cusco',
-            'area_m2' => 400,
-            'tipo_cultivo' => 'Césped',
-        ]);
-
         $registros = [
-            [$saylla, 6, 40, 700, 'Riego por goteo'],
-            [$plaza, 5, 20, 280, 'Riego manual'],
-            [$saylla, 4, 45, 900, 'Riego por aspersión'],
-            [$plaza, 3, 25, 310, 'Riego manual'],
-            [$saylla, 2, 30, 650, 'Riego por goteo'],
-            [$plaza, 1, 20, 300, 'Riego manual'],
-            [$saylla, 0, 50, 1000, 'Riego por aspersión'],
+            [6, 40, 700, 'Riego por goteo'],
+            [5, 20, 280, 'Riego manual'],
+            [4, 45, 900, 'Riego por aspersión'],
+            [3, 25, 310, 'Riego manual'],
+            [2, 30, 650, 'Riego por goteo'],
+            [1, 20, 300, 'Riego manual'],
+            [0, 50, 1000, 'Riego por aspersión'],
         ];
 
-        foreach ($registros as [$parcela, $dias, $minutos, $litros, $nota]) {
+        foreach ($registros as [$dias, $minutos, $litros, $nota]) {
             $riego = $parcela->riegos()->create([
                 'fecha' => now()->subDays($dias)->toDateString(),
                 'duracion_min' => $minutos,

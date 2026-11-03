@@ -31,6 +31,10 @@ class AccesoTest extends TestCase
         ])->assertRedirect(route('inicio'));
 
         $this->assertDatabaseHas('users', ['email' => 'kino@correo.com', 'rol' => 'usuario']);
+        $this->assertDatabaseHas('parcelas', [
+            'usuario_id' => User::where('email', 'kino@correo.com')->value('id'),
+            'nombre' => 'Parcela principal',
+        ]);
         $this->assertAuthenticated();
     }
 

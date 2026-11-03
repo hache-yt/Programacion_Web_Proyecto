@@ -57,6 +57,7 @@ class AuthController extends Controller
         ]);
 
         $usuario = User::create($datos + ['rol' => 'usuario']);
+        $usuario->parcelaPrincipal();
 
         Auth::login($usuario);
         $request->session()->regenerate();

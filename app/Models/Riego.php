@@ -31,8 +31,7 @@ class Riego extends Model
     public function scopeFiltrar(Builder $consulta, array $filtros): Builder
     {
         return $consulta
-            ->when($filtros['fecha'] ?? null, fn ($q, $fecha) => $q->whereDate('fecha', $fecha))
-            ->when($filtros['parcela_id'] ?? null, fn ($q, $parcela) => $q->where('parcela_id', $parcela));
+            ->when($filtros['fecha'] ?? null, fn ($q, $fecha) => $q->whereDate('fecha', $fecha));
     }
 
     public function scopeVisiblesPara(Builder $consulta, User $usuario): Builder

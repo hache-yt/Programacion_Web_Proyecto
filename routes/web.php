@@ -20,7 +20,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('salir', [AuthController::class, 'logout'])->name('logout');
-    Route::resource('parcelas', ParcelaController::class)->except('show');
+    Route::get('parcelas', [ParcelaController::class, 'index'])->name('parcelas.index');
     Route::resource('riegos', RiegoController::class)->except('show');
     Route::get('estadisticas', [EstadisticaController::class, 'index'])->name('estadisticas.index');
     Route::get('alertas', [AlertaController::class, 'index'])->name('alertas.index');

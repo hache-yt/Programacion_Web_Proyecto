@@ -15,7 +15,6 @@ class EstadisticaController extends Controller
         $dias = collect(range(13, 0))->map(fn ($atras) => now()->subDays($atras)->toDateString());
 
         $riegos = Riego::visiblesPara($usuario)
-            ->with('parcela')
             ->where('fecha', '>=', $dias->first())
             ->get();
 
@@ -23,14 +22,9 @@ class EstadisticaController extends Controller
             fn ($dia) => round($riegos->filter(fn ($r) => $r->fecha->toDateString() === $dia)->sum('cantidad_litros'), 2)
         );
 
-        $porParcela = $riegos->groupBy(fn ($r) => $r->parcela->nombre)
-            ->map(fn ($grupo) => round($grupo->sum('cantidad_litros'), 2));
-
         return view('estadisticas.index', [
             'dias' => $dias->values(),
             'litrosPorDia' => $litrosPorDia->values(),
-            'parcelas' => $porParcela->keys()->values(),
-            'litrosPorParcela' => $porParcela->values(),
             'totalLitros' => $riegos->sum('cantidad_litros'),
         ]);
     }

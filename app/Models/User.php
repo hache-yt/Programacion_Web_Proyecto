@@ -28,6 +28,12 @@ class User extends Authenticatable
         return $this->hasMany(Parcela::class, 'usuario_id');
     }
 
+    public function parcelaPrincipal(): Parcela
+    {
+        return $this->parcelas()->orderBy('id')->first()
+            ?? $this->parcelas()->create(['nombre' => 'Parcela principal']);
+    }
+
     public function esAdmin(): bool
     {
         return $this->rol === 'administrador';
