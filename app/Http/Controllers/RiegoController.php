@@ -12,7 +12,10 @@ class RiegoController extends Controller
 {
     public function index(Request $request): View
     {
-        $filtros = $request->only(['fecha']);
+        $filtros = $request->validate([
+            'fecha' => ['nullable', 'date'],
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
 
         $riegos = Riego::visiblesPara($request->user())
             ->with('parcela')

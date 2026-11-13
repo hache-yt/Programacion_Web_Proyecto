@@ -1,0 +1,6 @@
+<Files "config.local.php">
+  Require all denied
+</Files>
+<Files "GUIA_CHATBOT_PROYECTO.md">
+  Require all denied
+</Files>

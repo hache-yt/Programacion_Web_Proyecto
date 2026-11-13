@@ -11,13 +11,24 @@ class AlertaController extends Controller
 {
     public function index(Request $request): View
     {
+        $filtros = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'estado' => ['nullable', 'in:todos,pendiente,atendida'],
+        ]);
+
         $alertas = Alerta::visiblesPara($request->user())
             ->with('riego.parcela')
+            ->when($filtros['q'] ?? null, fn ($consulta, $busqueda) => $consulta->where('mensaje', 'like', "%{$busqueda}%"))
+            ->when(($filtros['estado'] ?? 'todos') !== 'todos', fn ($consulta) => $consulta->where('estado', $filtros['estado']))
             ->orderByRaw("estado = 'pendiente' desc")
             ->orderByDesc('id')
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('alertas.index', ['alertas' => $alertas]);
+        return view('alertas.index', [
+            'alertas' => $alertas,
+            'filtros' => array_merge(['estado' => 'todos'], $filtros),
+        ]);
     }
 
     public function update(Request $request, Alerta $alerta): RedirectResponse

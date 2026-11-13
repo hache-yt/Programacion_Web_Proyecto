@@ -56,4 +56,5 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   crear('grafico-dias', 'line');
+  crear('grafico-inicio', 'line');
 });

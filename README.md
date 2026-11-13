@@ -20,10 +20,9 @@ Si aparece un error indicando que no existe `vendor/autoload.php`, ejecuta `inst
 
 Cada cuenta trabaja con una parcela principal: los nuevos riegos se vinculan automáticamente a ella y ya no se ofrecen opciones para crear, cambiar o eliminar parcelas. Los registros y las relaciones históricas existentes se conservan; no se ejecuta una migración que los elimine o reasigne.
 
-## Cuentas de prueba
+## Cuentas locales
 
-- Administrador: admin@riego.test / admin1234
-- Usuario: usuario@riego.test / usuario1234
+Los datos de demostración se crean únicamente en `APP_ENV=local`. Para crear las cuentas locales, define `ADMIN_DEVELOPMENT_PASSWORD` y `DEMO_USER_PASSWORD` en el archivo `.env` privado antes de ejecutar `php artisan db:seed`. No se incluyen credenciales predeterminadas en el repositorio. En producción no se crean estas cuentas; si una cuenta marcada para cambio inicial de contraseña se usa allí, el sistema exige cambiarla antes de acceder al resto de la plataforma.
 
 ## Pruebas
 

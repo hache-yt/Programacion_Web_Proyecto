@@ -5,6 +5,11 @@
 <div><p class="eyebrow">Tu espacio de cultivo</p><h1>Parcela principal</h1><p>Riegos nuevos y estadísticas se registran en esta parcela. Tus datos históricos se mantienen intactos.</p></div>
 </div>
 @if ($esAdmin)
+<form class="filtros user-filters" method="GET" action="{{ route('parcelas.index') }}">
+<div class="campo"><label for="q">Buscar cuenta</label><input id="q" name="q" value="{{ $filtros['q'] ?? '' }}" placeholder="Nombre o correo electrónico"></div>
+<button class="boton" type="submit">Buscar</button>
+<a class="boton boton-secundario" href="{{ route('parcelas.index') }}">Limpiar</a>
+</form>
 <div class="panel tabla-panel">
 <div class="tabla-scroll">
 <table>
@@ -25,6 +30,7 @@
 </table>
 </div>
 </div>
+{{ $parcelas->links() }}
 @else
 @forelse ($parcelas as $parcela)
 <section class="panel">

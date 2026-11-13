@@ -1,10 +1,9 @@
 @extends('layouts.app')
 @section('titulo', 'Crear cuenta')
 @section('contenido')
-<div class="auth-wrap">
 <section class="auth-card">
-<div class="page-heading"><div><p class="eyebrow">Empieza a cuidar el agua</p><h1>Crear cuenta</h1><p>Tu cuenta incluye una parcela principal para empezar a registrar riegos.</p></div></div>
-<form class="panel formulario" method="POST" action="{{ route('registro') }}" novalidate>
+<div class="auth-heading"><p class="eyebrow">Empieza a cuidar el agua</p><h1>Crear una cuenta</h1><p>Completa tus datos para empezar a usar la plataforma.</p></div>
+<form class="auth-form formulario registro-form" method="POST" action="{{ route('registro') }}" novalidate>
 @csrf
 <div class="campo">
 <label for="name">Nombre completo</label>
@@ -18,16 +17,15 @@
 </div>
 <div class="campo">
 <label for="password">Contraseña <span>(mínimo 8 caracteres)</span></label>
-<input type="password" id="password" name="password" required autocomplete="new-password" aria-invalid="{{ $errors->has('password') ? 'true' : 'false' }}">
+<div class="password-field"><input type="password" id="password" name="password" required autocomplete="new-password" aria-invalid="{{ $errors->has('password') ? 'true' : 'false' }}"><button class="password-toggle" type="button" aria-label="Mostrar contraseña" aria-pressed="false" data-password-toggle="password">Ver</button></div>
 <small class="error" role="alert">{{ $errors->first('password') }}</small>
 </div>
 <div class="campo">
 <label for="password_confirmation">Repetir contraseña</label>
-<input type="password" id="password_confirmation" name="password_confirmation" required autocomplete="new-password">
+<div class="password-field"><input type="password" id="password_confirmation" name="password_confirmation" required autocomplete="new-password"><button class="password-toggle" type="button" aria-label="Mostrar contraseña" aria-pressed="false" data-password-toggle="password_confirmation">Ver</button></div>
 </div>
-<button class="boton" type="submit">Crear cuenta</button>
-<p class="auth-switch">¿Ya tienes cuenta? <a class="enlace" href="{{ route('login') }}">Ingresar</a></p>
+<button class="boton auth-submit" type="submit">Registrarse</button>
+<p class="auth-switch">¿Ya tienes una cuenta? <a class="enlace" href="{{ route('login') }}">Iniciar sesión</a></p>
 </form>
 </section>
-</div>
 @endsection

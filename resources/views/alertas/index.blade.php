@@ -4,6 +4,12 @@
 <div class="page-heading">
 <div><p class="eyebrow">Atención al consumo</p><h1>Alertas</h1><p>Revisa los registros que superaron el umbral de consumo.</p></div>
 </div>
+<form class="filtros user-filters" method="GET" action="{{ route('alertas.index') }}">
+<div class="campo"><label for="q">Buscar alerta</label><input id="q" name="q" value="{{ $filtros['q'] ?? '' }}" placeholder="Detalle de la alerta"></div>
+<div class="campo"><label for="estado">Estado</label><select id="estado" name="estado"><option value="todos" @selected(($filtros['estado'] ?? 'todos') === 'todos')>Todos</option><option value="pendiente" @selected(($filtros['estado'] ?? '') === 'pendiente')>Pendientes</option><option value="atendida" @selected(($filtros['estado'] ?? '') === 'atendida')>Atendidas</option></select></div>
+<button class="boton" type="submit">Filtrar</button>
+<a class="boton boton-secundario" href="{{ route('alertas.index') }}">Limpiar</a>
+</form>
 <div class="panel tabla-panel">
 <div class="tabla-scroll">
 <table>
@@ -36,4 +42,5 @@
 </table>
 </div>
 </div>
+{{ $alertas->links() }}
 @endsection

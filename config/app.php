@@ -6,6 +6,10 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    'admin_development_password' => env('ADMIN_DEVELOPMENT_PASSWORD'),
+
+    'demo_user_password' => env('DEMO_USER_PASSWORD'),
+
     'debug' => (bool) env('APP_DEBUG', false),
 
     'url' => env('APP_URL', 'http://localhost'),

@@ -7,10 +7,14 @@
 </div>
 <form class="filtros" method="GET" action="{{ route('riegos.index') }}">
 <div class="campo">
+<label for="buscar-riego">Buscar observaciones</label>
+<input type="search" id="buscar-riego" name="q" value="{{ $filtros['q'] ?? '' }}" placeholder="Método o nota del riego">
+</div>
+<div class="campo">
 <label for="filtro-fecha">Filtrar por fecha</label>
 <input type="date" id="filtro-fecha" name="fecha" value="{{ $filtros['fecha'] ?? '' }}">
 </div>
-<button class="boton" type="submit">Aplicar filtro</button>
+<button class="boton" type="submit">Buscar y filtrar</button>
 <a class="boton boton-secundario" href="{{ route('riegos.index') }}">Limpiar</a>
 </form>
 <div class="panel tabla-panel">

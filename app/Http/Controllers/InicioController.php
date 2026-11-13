@@ -18,6 +18,10 @@ class InicioController extends Controller
         }
 
         $parcela = $usuario->parcelaPrincipal();
+        $dias = collect(range(13, 0))->map(fn ($atras) => now()->subDays($atras)->toDateString());
+        $riegosRecientes = Riego::visiblesPara($usuario)
+            ->where('fecha', '>=', $dias->first())
+            ->get();
 
         return view('inicio', [
             'resumen' => [
@@ -28,6 +32,11 @@ class InicioController extends Controller
                     ->sum('cantidad_litros'),
                 'alertas' => Alerta::visiblesPara($usuario)->where('estado', 'pendiente')->count(),
             ],
+            'dias' => $dias->values(),
+            'litrosPorDia' => $dias->map(
+                fn ($dia) => round($riegosRecientes->filter(fn ($riego) => $riego->fecha->toDateString() === $dia)->sum('cantidad_litros'), 2)
+            )->values(),
+            'riegosRecientes' => $riegosRecientes->sortByDesc('fecha')->take(5)->values(),
         ]);
     }
 }

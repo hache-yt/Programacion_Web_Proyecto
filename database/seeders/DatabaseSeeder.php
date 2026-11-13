@@ -9,17 +9,21 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        User::create([
-            'name' => 'Administrador',
-            'email' => 'admin@riego.test',
-            'password' => 'admin1234',
-            'rol' => 'administrador',
-        ]);
+        if (! app()->environment('local')) {
+            return;
+        }
+
+        $this->call(AdminDevelopmentSeeder::class);
+
+        $demoPassword = config('app.demo_user_password');
+        if (! is_string($demoPassword) || $demoPassword === '') {
+            return;
+        }
 
         $demo = User::create([
             'name' => 'Usuario Demo',
             'email' => 'usuario@riego.test',
-            'password' => 'usuario1234',
+            'password' => $demoPassword,
             'rol' => 'usuario',
         ]);
 
