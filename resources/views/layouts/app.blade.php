@@ -134,7 +134,10 @@ Crear cuenta
 </aside>
 <div class="workspace">
 <header class="topbar">
+<div style="display: flex; align-items: center; gap: 1rem;">
 <p class="topbar-label">@yield('titulo', 'Riego Inteligente')</p>
+<a class="enlace" href="{{ asset('pagina-web/index.html') }}" target="_blank" rel="noopener" style="font-size: 0.85rem; font-weight: 600; background: var(--green-pale); color: var(--green-dark); padding: 4px 10px; border-radius: 8px; text-decoration: none;">Visitar página web ↗</a>
+</div>
 @auth
 <div class="topbar-meta"><span class="date-chip">{{ now()->format('d/m/Y') }} · {{ now()->format('H:i') }}</span><a class="notification-link" href="{{ route('alertas.index') }}" aria-label="Ver alertas"><span aria-hidden="true">♧</span>@php($alertasPendientes = \App\Models\Alerta::visiblesPara(auth()->user())->where('estado', 'pendiente')->count())@if ($alertasPendientes > 0)<span class="notification-count">{{ $alertasPendientes }}</span>@endif</a></div>
 <div class="topbar-user">
@@ -164,11 +167,15 @@ Crear cuenta
 <nav class="footer-links" aria-label="Información del sistema">
 <a href="{{ route('privacidad') }}">Privacidad</a><a href="{{ route('terminos') }}">Términos</a><a href="{{ route('ayuda') }}">Ayuda</a><a href="{{ route('acerca') }}">Acerca de</a>
 </nav>
+<div class="developer-contact" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.12); font-size: 0.82rem;">
+<strong>¿Eres desarrollador? Contacta al equipo:</strong>
+<a href="https://wa.me/51981732132" target="_blank" rel="noopener" style="color: #9fe3b0; text-decoration: none; margin: 0 6px;">WhatsApp</a> ·
+<a href="https://facebook.com/empresariego" target="_blank" rel="noopener" style="color: #9fe3b0; text-decoration: none; margin: 0 6px;">Facebook</a> ·
+<a href="https://twitter.com/empresariego" target="_blank" rel="noopener" style="color: #9fe3b0; text-decoration: none; margin: 0 6px;">Twitter</a> ·
+<a href="https://instagram.com/empresariego" target="_blank" rel="noopener" style="color: #9fe3b0; text-decoration: none; margin: 0 6px;">Instagram</a>
+</div>
 <button class="footer-cookie-settings" type="button" data-cookie-open>Preferencias de cookies</button>
 </footer>
-</div>
-</div>
-@endif
 <div class="chatbot-widget">
 <section class="chatbot-panel" id="chatbot-panel" role="dialog" aria-label="Asistente de Riego Inteligente" hidden>
 <header class="chatbot-panel-header">
@@ -206,5 +213,6 @@ Crear cuenta
 </section>
 <script src="{{ asset('js/interacciones.js') }}?v={{ filemtime(public_path('js/interacciones.js')) }}"></script>
 @stack('scripts')
+@endif
 </body>
 </html>
