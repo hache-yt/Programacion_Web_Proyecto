@@ -60,6 +60,49 @@ class SistemaRiegoTest extends TestCase
             ->assertSee('Control manual');
     }
 
+    public function test_cliente_puede_registrar_un_equipo_fisico_simulado(): void
+    {
+        $cliente = User::factory()->create();
+
+        $this->actingAs($cliente)
+            ->post(route('sistemas.store'), [
+                'nombre' => 'Invernadero norte',
+                'descripcion' => 'Equipo principal',
+                'registro_fisico' => '1',
+                'tipo_conexion' => 'wifi',
+                'direccion_ip' => '192.168.1.120',
+                'identificador_dispositivo' => 'ESP32-RIEGO-01',
+                'dispositivo_encontrado' => '1',
+            ])
+            ->assertRedirect();
+
+        $sistema = SistemaRiego::where('nombre', 'Invernadero norte')->firstOrFail();
+        $this->assertTrue($sistema->conexion_simulada);
+        $this->assertSame('wifi', $sistema->tipo_conexion);
+        $this->assertSame('192.168.1.120', $sistema->direccion_ip);
+        $this->assertSame('ESP32-RIEGO-01', $sistema->identificador_dispositivo);
+
+        $this->get(route('sistemas.show', $sistema))
+            ->assertOk()
+            ->assertSee('ENCONTRADO (SIMULADO)')
+            ->assertSee('ESP32-RIEGO-01');
+    }
+
+    public function test_registro_fisico_requiere_tipo_ip_e_identificador(): void
+    {
+        $cliente = User::factory()->create();
+
+        $this->actingAs($cliente)
+            ->post(route('sistemas.store'), [
+                'nombre' => 'Equipo incompleto',
+                'registro_fisico' => '1',
+                'tipo_conexion' => '',
+                'direccion_ip' => 'direccion-invalida',
+                'identificador_dispositivo' => '',
+            ])
+            ->assertSessionHasErrors(['tipo_conexion', 'direccion_ip', 'identificador_dispositivo']);
+    }
+
     public function test_lecturas_de_prueba_validan_tipo_unidad_y_rango(): void
     {
         $cliente = User::factory()->create();

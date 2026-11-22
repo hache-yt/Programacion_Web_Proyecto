@@ -12,11 +12,22 @@ class SistemaRiego extends Model
 {
     protected $table = 'sistemas_riego';
 
-    protected $fillable = ['parcela_id', 'nombre', 'descripcion'];
+    protected $fillable = [
+        'parcela_id',
+        'nombre',
+        'descripcion',
+        'tipo_conexion',
+        'direccion_ip',
+        'identificador_dispositivo',
+        'conexion_simulada',
+    ];
 
     protected function casts(): array
     {
-        return ['riego_activo' => 'boolean'];
+        return [
+            'riego_activo' => 'boolean',
+            'conexion_simulada' => 'boolean',
+        ];
     }
 
     public function parcela(): BelongsTo

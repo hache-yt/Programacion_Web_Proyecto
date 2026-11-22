@@ -3088,6 +3088,78 @@ tbody tr:hover {
   justify-self: start;
 }
 
+.system-registration-type {
+  grid-column: 1 / -1;
+  border: 0;
+  padding: 0;
+}
+
+.system-registration-type legend {
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-weight: 680;
+}
+
+.registration-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.registration-option input {
+  width: 18px;
+  min-height: 18px;
+}
+
+.physical-device-fields {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #cfe0d4;
+  border-radius: 12px;
+  background: #f6faf7;
+}
+
+.physical-device-fields[hidden] {
+  display: none;
+}
+
+.device-search-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.device-search-box p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 3px;
+}
+
+.device-search-status {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.device-search-status.is-searching {
+  color: #075ca8;
+}
+
+.device-search-status.is-found {
+  color: #287a50;
+}
+
+.device-summary {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
 .system-list-card {
   display: grid;
   gap: 12px;

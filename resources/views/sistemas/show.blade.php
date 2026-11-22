@@ -8,7 +8,13 @@
 <div class="system-status-grid">
 <section class="panel system-status-card"><span>Estado del riego</span><strong class="irrigation-status">{{ $sistema->riego_activo ? 'ACTIVO' : 'CERRADO' }}</strong><small>El estado solo se actualizará al conectar y verificar un actuador.</small></section>
 <section class="panel system-status-card"><span>Modo seleccionado</span><strong>{{ strtoupper($sistema->configuracion->modo ?? 'manual') }}</strong><small>Configuración independiente de este sistema.</small></section>
-<section class="panel system-status-card"><span>Conexión de sensores</span><strong class="status-pill status-offline">NO CONECTADA</strong><small>Este proyecto aún no recibe datos de hardware.</small></section>
+<section class="panel system-status-card"><span>Conexión del equipo</span><strong class="status-pill {{ $sistema->conexion_simulada ? 'status-test' : 'status-offline' }}">{{ $sistema->conexion_simulada ? 'ENCONTRADO (SIMULADO)' : 'NO CONECTADA' }}</strong>
+@if ($sistema->conexion_simulada)
+<small>{{ $sistema->identificador_dispositivo }} · {{ $sistema->tipo_conexion === 'wifi' ? 'Wi-Fi' : 'Cable de red' }} · {{ $sistema->direccion_ip }}</small>
+@else
+<small>Este proyecto aún no recibe datos de hardware.</small>
+@endif
+</section>
 <section class="panel system-status-card"><span>Última lectura registrada</span><strong>{{ $ultimaLectura?->fecha_lectura?->format('d/m/Y H:i') ?? 'Sin lecturas' }}</strong>
 @if ($ultimaLectura)
 <small class="{{ $lecturaVencida ? 'stale-reading' : 'fresh-reading' }}">{{ $lecturaVencida ? 'Dato desactualizado (más de 30 minutos)' : 'Dato reciente; de prueba, no recibido de hardware' }}</small>

@@ -123,6 +123,58 @@ document.addEventListener('DOMContentLoaded', () => {
       boton.setAttribute('aria-label', `${mostrar ? 'Ocultar' : 'Mostrar'} contraseña`);
       boton.setAttribute('aria-pressed', String(mostrar));
     });
+
+    const physicalDeviceFields = document.querySelector('[data-physical-device-fields]');
+    const deviceFound = document.querySelector('[data-device-found]');
+    const deviceStatus = document.querySelector('[data-device-status]');
+    const searchDeviceButton = document.querySelector('[data-search-device]');
+
+    document.querySelectorAll('input[name="registro_fisico"]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        if (!physicalDeviceFields) {
+          return;
+        }
+
+        physicalDeviceFields.hidden = radio.value !== '1';
+        if (radio.value !== '1') {
+          deviceStatus.textContent = 'Sin búsqueda realizada.';
+          deviceStatus.className = 'device-search-status';
+        }
+      });
+    });
+
+    searchDeviceButton?.addEventListener('click', () => {
+      if (!deviceStatus || !deviceFound) {
+        return;
+      }
+
+      searchDeviceButton.disabled = true;
+      searchDeviceButton.textContent = 'Buscando…';
+      deviceStatus.className = 'device-search-status is-searching';
+      deviceStatus.textContent = 'Buscando equipos compatibles en la red…';
+
+      window.setTimeout(() => {
+        const tipoConexion = document.getElementById('tipo_conexion');
+        const direccionIp = document.getElementById('direccion_ip');
+        const identificador = document.getElementById('identificador_dispositivo');
+
+        if (tipoConexion && !tipoConexion.value) {
+          tipoConexion.value = 'wifi';
+        }
+        if (direccionIp && !direccionIp.value) {
+          direccionIp.value = '192.168.1.120';
+        }
+        if (identificador && !identificador.value) {
+          identificador.value = 'ESP32-RIEGO-01';
+        }
+
+        deviceFound.value = '1';
+        deviceStatus.className = 'device-search-status is-found';
+        deviceStatus.textContent = 'Equipo encontrado en la demostración: ESP32-RIEGO-01. La conexión real aún no está habilitada.';
+        searchDeviceButton.disabled = false;
+        searchDeviceButton.textContent = 'Buscar nuevamente';
+      }, 2200);
+    });
   });
 
   const menuToggle = document.querySelector('.menu-toggle');

@@ -26,19 +26,43 @@ class SistemaRiegoController extends Controller
         $datos = $request->validate([
             'nombre' => ['required', 'string', 'max:100'],
             'descripcion' => ['nullable', 'string', 'max:1000'],
+            'registro_fisico' => ['nullable', 'in:0,1'],
+            'tipo_conexion' => ['nullable', 'required_if:registro_fisico,1', 'in:wifi,ethernet'],
+            'direccion_ip' => ['nullable', 'required_if:registro_fisico,1', 'ip', 'max:45'],
+            'identificador_dispositivo' => ['nullable', 'required_if:registro_fisico,1', 'string', 'max:100'],
+            'dispositivo_encontrado' => ['nullable', 'in:0,1'],
         ], [
             'nombre.required' => 'Ingresa el nombre del sistema.',
             'nombre.max' => 'El nombre admite hasta 100 caracteres.',
+            'tipo_conexion.required_if' => 'Selecciona el tipo de conexión del equipo.',
+            'direccion_ip.required_if' => 'Ingresa la dirección IP del equipo.',
+            'direccion_ip.ip' => 'Ingresa una dirección IP válida.',
+            'identificador_dispositivo.required_if' => 'Busca o ingresa el identificador del equipo.',
         ]);
 
-        $sistema = DB::transaction(function () use ($request, $datos): SistemaRiego {
-            $sistema = $request->user()->parcelaPrincipal()->sistemasRiego()->create($datos);
+        $registroFisico = ($datos['registro_fisico'] ?? '0') === '1';
+
+        $datosSistema = [
+            'nombre' => $datos['nombre'],
+            'descripcion' => $datos['descripcion'] ?? null,
+            'tipo_conexion' => $registroFisico ? $datos['tipo_conexion'] : null,
+            'direccion_ip' => $registroFisico ? $datos['direccion_ip'] : null,
+            'identificador_dispositivo' => $registroFisico ? $datos['identificador_dispositivo'] : null,
+            'conexion_simulada' => $registroFisico,
+        ];
+
+        $sistema = DB::transaction(function () use ($request, $datosSistema): SistemaRiego {
+            $sistema = $request->user()->parcelaPrincipal()->sistemasRiego()->create($datosSistema);
             $sistema->configuracion()->create(['modo' => 'manual', 'unidad_nivel_agua' => '%']);
 
             return $sistema;
         });
 
-        return redirect()->route('sistemas.show', $sistema)->with('ok', 'Sistema creado. La integración con sensores y actuadores aún no está conectada.');
+        $mensaje = $registroFisico
+            ? 'Sistema físico registrado con una simulación de búsqueda. No se realizó una conexión real con el equipo.'
+            : 'Sistema creado. La integración con sensores y actuadores aún no está conectada.';
+
+        return redirect()->route('sistemas.show', $sistema)->with('ok', $mensaje);
     }
 
     public function show(Request $request, SistemaRiego $sistema): View
