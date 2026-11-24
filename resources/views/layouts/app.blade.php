@@ -136,7 +136,7 @@ Crear cuenta
 <header class="topbar">
 <div style="display: flex; align-items: center; gap: 1rem;">
 <p class="topbar-label">@yield('titulo', 'Riego Inteligente')</p>
-<a class="enlace" href="{{ asset('pagina-web/index.html') }}" target="_blank" rel="noopener" style="font-size: 0.85rem; font-weight: 600; background: var(--green-pale); color: var(--green-dark); padding: 4px 10px; border-radius: 8px; text-decoration: none;">Visitar página web ↗</a>
+<a class="enlace" href="https://yakucusco.site.je/" target="_blank" rel="noopener" style="font-size: 0.85rem; font-weight: 600; background: var(--green-pale); color: var(--green-dark); padding: 4px 10px; border-radius: 8px; text-decoration: none;">Visitar página web ↗</a>
 </div>
 @auth
 <div class="topbar-meta"><span class="date-chip">{{ now()->format('d/m/Y') }} · {{ now()->format('H:i') }}</span><a class="notification-link" href="{{ route('alertas.index') }}" aria-label="Ver alertas"><span aria-hidden="true">♧</span>@php($alertasPendientes = \App\Models\Alerta::visiblesPara(auth()->user())->where('estado', 'pendiente')->count())@if ($alertasPendientes > 0)<span class="notification-count">{{ $alertasPendientes }}</span>@endif</a></div>

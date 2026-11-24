@@ -42,7 +42,7 @@
 <section class="panel">
 <div class="panel-heading"><h2>Lecturas del sistema</h2><p class="panel-copy">Solo se guardan cuando se envía el formulario. Todas se identifican como datos de prueba.</p></div>
 <div class="reading-card-grid">
-@foreach (['nivel_agua' => 'Nivel de agua', 'humedad_suelo' => 'Humedad del suelo', 'temperatura' => 'Temperatura ambiente', 'humedad_ambiental' => 'Humedad ambiental'] as $tipo => $titulo)
+@foreach (['humedad_suelo' => 'Humedad del suelo', 'temperatura' => 'Temperatura ambiente', 'humedad_ambiental' => 'Humedad ambiental'] as $tipo => $titulo)
 @php($lectura = $medicionesPorTipo->get($tipo)?->first())
 <article class="reading-card">
 <h3>{{ $titulo }}</h3>
@@ -58,14 +58,13 @@
 @endforeach
 </div>
 </section>
-<section class="panel">
-<div class="panel-heading"><h2>Registrar lectura de prueba</h2><p class="panel-copy">No simula la conexión de sensores. El nivel usa la unidad configurada; humedades usan % y temperatura °C. Las unidades y rangos se verifican en el servidor.</p></div>
+<div class="panel-heading"><h2>Registrar lectura de prueba</h2><p class="panel-copy">No simula la conexión de sensores. Solo los tipos permitidos son humedad del suelo, temperatura ambiente y humedad ambiental. Las unidades y rangos se verifican en el servidor.</p></div>
 <form class="formulario" method="POST" action="{{ route('sistemas.mediciones.store', $sistema) }}">
 @csrf
 <div class="form-grid">
-<div class="campo"><label for="tipo">Tipo de lectura</label><select id="tipo" name="tipo" required><option value="">Selecciona un tipo</option><option value="nivel_agua" @selected(old('tipo') === 'nivel_agua')>Nivel de agua</option><option value="humedad_suelo" @selected(old('tipo') === 'humedad_suelo')>Humedad del suelo</option><option value="temperatura" @selected(old('tipo') === 'temperatura')>Temperatura ambiente</option><option value="humedad_ambiental" @selected(old('tipo') === 'humedad_ambiental')>Humedad ambiental</option></select><small class="error" role="alert">{{ $errors->first('tipo') }}</small></div>
+<div class="campo"><label for="tipo">Tipo de lectura</label><select id="tipo" name="tipo" required><option value="">Selecciona un tipo</option><option value="humedad_suelo" @selected(old('tipo') === 'humedad_suelo')>Humedad del suelo</option><option value="temperatura" @selected(old('tipo') === 'temperatura')>Temperatura ambiente</option><option value="humedad_ambiental" @selected(old('tipo') === 'humedad_ambiental')>Humedad ambiental</option></select><small class="error" role="alert">{{ $errors->first('tipo') }}</small></div>
 <div class="campo"><label for="valor">Valor</label><input id="valor" name="valor" type="number" step="any" value="{{ old('valor') }}" required><small class="error" role="alert">{{ $errors->first('valor') }}</small></div>
-<div class="campo"><label for="unidad">Unidad</label><select id="unidad" name="unidad" required><option value="%" @selected(old('unidad', $sistema->configuracion->unidad_nivel_agua ?? '%') === '%')>Porcentaje (%)</option><option value="L" @selected(old('unidad', $sistema->configuracion->unidad_nivel_agua ?? '%') === 'L')>Litros (L)</option><option value="cm" @selected(old('unidad', $sistema->configuracion->unidad_nivel_agua ?? '%') === 'cm')>Centímetros (cm)</option><option value="°C" @selected(old('unidad') === '°C')>Grados Celsius (°C)</option></select><small class="error" role="alert">{{ $errors->first('unidad') }}</small></div>
+<div class="campo"><label for="unidad">Unidad</label><select id="unidad" name="unidad" required><option value="%" @selected(old('unidad') === '%')>Porcentaje (%)</option><option value="°C" @selected(old('unidad') === '°C')>Grados Celsius (°C)</option></select><small class="error" role="alert">{{ $errors->first('unidad') }}</small></div>
 <div class="campo"><label for="sensor_id">Identificador de sensor <span>(opcional)</span></label><input id="sensor_id" name="sensor_id" maxlength="100" value="{{ old('sensor_id') }}"><small class="error" role="alert">{{ $errors->first('sensor_id') }}</small></div>
 <div class="campo"><label for="fecha_lectura">Fecha y hora de lectura</label><input id="fecha_lectura" name="fecha_lectura" type="datetime-local" max="{{ now()->format('Y-m-d\TH:i') }}" value="{{ old('fecha_lectura', now()->format('Y-m-d\TH:i')) }}" required><small class="error" role="alert">{{ $errors->first('fecha_lectura') }}</small></div>
 </div>
@@ -76,7 +75,7 @@
 <div class="panel-heading"><h2>Lecturas recientes</h2><p class="panel-copy">Fecha, sistema, sensor, unidad y origen de cada valor registrado.</p></div>
 <div class="tabla-scroll"><table><thead><tr><th>Fecha y hora</th><th>Tipo</th><th>Valor</th><th>Sensor</th><th>Origen</th></tr></thead><tbody>
 @forelse ($medicionesPorTipo->flatten()->sortByDesc('fecha_lectura')->take(20) as $lectura)
-<tr><td>{{ $lectura->fecha_lectura->format('d/m/Y H:i') }}</td><td>{{ ['nivel_agua' => 'Nivel de agua', 'humedad_suelo' => 'Humedad del suelo', 'temperatura' => 'Temperatura ambiente', 'humedad_ambiental' => 'Humedad ambiental'][$lectura->tipo] ?? $lectura->tipo }}</td><td>{{ number_format($lectura->valor, 2) }} {{ $lectura->unidad }}</td><td>{{ $lectura->sensor_id ?: 'No identificado' }}</td><td>{{ $lectura->es_prueba ? 'Prueba manual' : 'Integración' }}</td></tr>
+<tr><td>{{ $lectura->fecha_lectura->format('d/m/Y H:i') }}</td><td>{{ ['humedad_suelo' => 'Humedad del suelo', 'temperatura' => 'Temperatura ambiente', 'humedad_ambiental' => 'Humedad ambiental'][$lectura->tipo] ?? $lectura->tipo }}</td><td>{{ number_format($lectura->valor, 2) }} {{ $lectura->unidad }}</td><td>{{ $lectura->sensor_id ?: 'No identificado' }}</td><td>{{ $lectura->es_prueba ? 'Prueba manual' : 'Integración' }}</td></tr>
 @empty
 <tr><td class="vacio" colspan="5"><strong>Sin lecturas registradas</strong>Los valores aparecerán aquí al guardar una lectura.</td></tr>
 @endforelse
@@ -90,11 +89,9 @@
 @method('PUT')
 <div class="form-grid">
 <div class="campo"><label for="modo">Modo</label><select id="modo" name="modo"><option value="manual" @selected(old('modo', $configuracion->modo ?? 'manual') === 'manual')>Manual</option><option value="automatico" @selected(old('modo', $configuracion->modo ?? 'manual') === 'automatico')>Automático</option></select><small class="error" role="alert">{{ $errors->first('modo') }}</small></div>
-<div class="campo"><label for="unidad_nivel_agua">Unidad del nivel de agua</label><select id="unidad_nivel_agua" name="unidad_nivel_agua"><option value="%" @selected(old('unidad_nivel_agua', $configuracion->unidad_nivel_agua ?? '%') === '%')>Porcentaje</option><option value="L" @selected(old('unidad_nivel_agua', $configuracion->unidad_nivel_agua ?? '%') === 'L')>Litros</option><option value="cm" @selected(old('unidad_nivel_agua', $configuracion->unidad_nivel_agua ?? '%') === 'cm')>Centímetros</option></select></div>
 <div class="campo"><label for="humedad_suelo_minima">Humedad mínima del suelo (%)</label><input id="humedad_suelo_minima" name="humedad_suelo_minima" type="number" min="0" max="100" step="0.01" value="{{ old('humedad_suelo_minima', $configuracion->humedad_suelo_minima ?? '') }}"><small class="error" role="alert">{{ $errors->first('humedad_suelo_minima') }}</small></div>
 <div class="campo"><label for="humedad_suelo_maxima">Humedad máxima del suelo (%)</label><input id="humedad_suelo_maxima" name="humedad_suelo_maxima" type="number" min="0" max="100" step="0.01" value="{{ old('humedad_suelo_maxima', $configuracion->humedad_suelo_maxima ?? '') }}"><small class="error" role="alert">{{ $errors->first('humedad_suelo_maxima') }}</small></div>
 <div class="campo"><label for="temperatura_relevante">Temperatura relevante (°C) <span>(opcional)</span></label><input id="temperatura_relevante" name="temperatura_relevante" type="number" min="-80" max="100" step="0.01" value="{{ old('temperatura_relevante', $configuracion->temperatura_relevante ?? '') }}"><small class="error" role="alert">{{ $errors->first('temperatura_relevante') }}</small></div>
-<div class="campo"><label for="nivel_agua_minimo">Nivel mínimo de agua ({{ old('unidad_nivel_agua', $configuracion->unidad_nivel_agua ?? '%') }})</label><input id="nivel_agua_minimo" name="nivel_agua_minimo" type="number" min="0" step="0.01" value="{{ old('nivel_agua_minimo', $configuracion->nivel_agua_minimo ?? '') }}"><small class="error" role="alert">{{ $errors->first('nivel_agua_minimo') }}</small></div>
 <fieldset class="campo days-field"><legend>Días permitidos para riego</legend>
 @php($diasSeleccionados = old('dias_permitidos', $configuracion->dias_permitidos ?? []))
 @foreach ([1 => 'Lun', 2 => 'Mar', 3 => 'Mié', 4 => 'Jue', 5 => 'Vie', 6 => 'Sáb', 7 => 'Dom'] as $numeroDia => $dia)

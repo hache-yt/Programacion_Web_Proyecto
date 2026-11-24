@@ -12,11 +12,9 @@ class Configuracion extends Model
     protected $fillable = [
         'sistema_riego_id',
         'modo',
-        'unidad_nivel_agua',
         'humedad_suelo_minima',
         'humedad_suelo_maxima',
         'temperatura_relevante',
-        'nivel_agua_minimo',
         'dias_permitidos',
         'hora_inicio',
         'hora_fin',
@@ -30,7 +28,6 @@ class Configuracion extends Model
             'humedad_suelo_minima' => 'float',
             'humedad_suelo_maxima' => 'float',
             'temperatura_relevante' => 'float',
-            'nivel_agua_minimo' => 'float',
             'dias_permitidos' => 'array',
         ];
     }

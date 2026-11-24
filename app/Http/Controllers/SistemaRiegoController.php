@@ -53,7 +53,7 @@ class SistemaRiegoController extends Controller
 
         $sistema = DB::transaction(function () use ($request, $datosSistema): SistemaRiego {
             $sistema = $request->user()->parcelaPrincipal()->sistemasRiego()->create($datosSistema);
-            $sistema->configuracion()->create(['modo' => 'manual', 'unidad_nivel_agua' => '%']);
+            $sistema->configuracion()->create(['modo' => 'manual']);
 
             return $sistema;
         });
@@ -104,7 +104,7 @@ class SistemaRiegoController extends Controller
         $this->autorizar($request, $sistema);
 
         $datos = $request->validate([
-            'tipo' => ['required', 'in:nivel_agua,humedad_suelo,temperatura,humedad_ambiental'],
+            'tipo' => ['required', 'in:humedad_suelo,temperatura,humedad_ambiental'],
             'valor' => ['required', 'numeric', 'between:-80,100000000'],
             'unidad' => ['required', 'string', 'max:24'],
             'sensor_id' => ['nullable', 'string', 'max:100'],
@@ -127,11 +127,9 @@ class SistemaRiegoController extends Controller
 
         $datos = $request->validate([
             'modo' => ['required', 'in:manual,automatico'],
-            'unidad_nivel_agua' => ['required', 'in:%,L,cm'],
             'humedad_suelo_minima' => ['nullable', 'numeric', 'between:0,100', 'required_if:modo,automatico'],
             'humedad_suelo_maxima' => ['nullable', 'numeric', 'between:0,100', 'required_if:modo,automatico'],
             'temperatura_relevante' => ['nullable', 'numeric', 'between:-80,100'],
-            'nivel_agua_minimo' => ['nullable', 'numeric', 'min:0', 'required_if:modo,automatico'],
             'dias_permitidos' => ['required_if:modo,automatico', 'array', 'min:1'],
             'dias_permitidos.*' => ['integer', 'between:1,7'],
             'hora_inicio' => ['nullable', 'date_format:H:i', 'required_if:modo,automatico'],
@@ -153,22 +151,11 @@ class SistemaRiegoController extends Controller
             ]);
         }
 
-        $limiteNivel = match ($datos['unidad_nivel_agua']) {
-            '%' => 100,
-            'cm' => 10000,
-            default => 99999999.9999,
-        };
-        if (isset($datos['nivel_agua_minimo']) && $datos['nivel_agua_minimo'] > $limiteNivel) {
-            throw ValidationException::withMessages([
-                'nivel_agua_minimo' => 'El mínimo supera el rango admitido para la unidad seleccionada.',
-            ]);
-        }
-
         DB::transaction(function () use ($request, $sistema, $datos): void {
             $sistemaBloqueado = SistemaRiego::query()->lockForUpdate()->findOrFail($sistema->id);
             $configuracion = $sistemaBloqueado->configuracion()->firstOrCreate(
                 [],
-                ['modo' => 'manual', 'unidad_nivel_agua' => '%']
+                ['modo' => 'manual']
             );
             $modoAnterior = $configuracion->modo;
             $configuracion->update($datos);
@@ -246,7 +233,6 @@ class SistemaRiegoController extends Controller
     private function validarUnidadYRango(array $datos, SistemaRiego $sistema): void
     {
         $unidadEsperada = match ($datos['tipo']) {
-            'nivel_agua' => [$sistema->configuracion->unidad_nivel_agua ?? '%'],
             'humedad_suelo', 'humedad_ambiental' => ['%'],
             'temperatura' => ['°C'],
         };
@@ -257,9 +243,7 @@ class SistemaRiegoController extends Controller
 
         $valor = (float) $datos['valor'];
         $maximo = match ([$datos['tipo'], $datos['unidad']]) {
-            ['nivel_agua', '%'], ['humedad_suelo', '%'], ['humedad_ambiental', '%'] => 100,
-            ['nivel_agua', 'cm'] => 10000,
-            ['nivel_agua', 'L'] => 99999999.9999,
+            ['humedad_suelo', '%'], ['humedad_ambiental', '%'] => 100,
             ['temperatura', '°C'] => 100,
             default => null,
         };
@@ -273,7 +257,6 @@ class SistemaRiegoController extends Controller
     private function tiposLectura(): array
     {
         return [
-            'nivel_agua' => ['nombre' => 'Nivel de agua', 'unidad' => null],
             'humedad_suelo' => ['nombre' => 'Humedad del suelo', 'unidad' => '%'],
             'temperatura' => ['nombre' => 'Temperatura ambiente', 'unidad' => '°C'],
             'humedad_ambiental' => ['nombre' => 'Humedad ambiental', 'unidad' => '%'],

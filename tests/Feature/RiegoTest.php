@@ -192,4 +192,38 @@ class RiegoTest extends TestCase
         $this->get('/alertas')->assertOk();
         $this->get('/')->assertOk()->assertSee('Riegos registrados');
     }
+
+    public function test_panel_agrupa_consumo_diario_y_muestra_los_cinco_riegos_mas_recientes(): void
+    {
+        $parcela = $this->crearParcela();
+        Riego::create($this->datosRiego($parcela, ['cantidad_litros' => 650]));
+        Riego::create($this->datosRiego($parcela, ['cantidad_litros' => 350]));
+        for ($diasAtras = 1; $diasAtras <= 5; $diasAtras++) {
+            Riego::create($this->datosRiego($parcela, [
+                'fecha' => now()->subDays($diasAtras)->toDateString(),
+            ]));
+        }
+
+        $respuesta = $this->get('/');
+
+        $this->assertSame(
+            1000.0,
+            $respuesta->viewData('litrosPorDia')->last(),
+            json_encode($respuesta->viewData('litrosPorDia')->all())
+        );
+        $respuesta->assertOk()
+            ->assertViewHas('riegosRecientes', fn ($riegos) => $riegos->count() === 5);
+    }
+
+    public function test_observaciones_se_escapan_antes_de_mostrarse_en_el_historial(): void
+    {
+        $parcela = $this->crearParcela();
+        $contenido = '<script>alert("xss")</script>';
+        Riego::create($this->datosRiego($parcela, ['observaciones' => $contenido]));
+
+        $this->get('/riegos')
+            ->assertOk()
+            ->assertSee(e($contenido), false)
+            ->assertDontSee($contenido, false);
+    }
 }

@@ -20,6 +20,7 @@ Route::view('privacidad', 'informacion.privacidad')->name('privacidad');
 Route::view('terminos', 'informacion.terminos')->name('terminos');
 Route::view('ayuda', 'informacion.ayuda')->name('ayuda');
 Route::view('acerca-de', 'informacion.acerca')->name('acerca');
+Route::view('contacto', 'informacion.contacto')->name('contacto');
 
 Route::get('asistente/index.html', function () {
     return response()->file(base_path('riego-chatbot-infinityfree/public/index.html'));

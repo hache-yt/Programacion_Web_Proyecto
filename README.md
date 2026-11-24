@@ -36,6 +36,25 @@ Los datos de demostración se crean únicamente en `APP_ENV=local`. Para crear l
 
 `php artisan test tests/Feature`
 
+## Evidencia frente a la rúbrica
+
+| Indicador | Dónde se evidencia |
+|---|---|
+| 1. Comprensión y aplicación del framework | Laravel 12 en `composer.json`; rutas y middleware en `routes/web.php`; controladores, validación con Form Requests, modelos Eloquent, migraciones y vistas Blade. |
+| 2. Estructura y navegabilidad | Menú por rol, rutas con nombre, navegación activa y enlaces a los módulos en `resources/views/layouts/app.blade.php`; los permisos se verifican en middleware y rutas. |
+| 3. Apariencia visual | Panel de usuario en `resources/views/inicio.blade.php`, panel administrativo en `resources/views/admin/index.blade.php` y estilos centralizados en `public/css/styles.css`. |
+| 4. Compatibilidad y responsabilidad | `public/css/styles.css` adapta el diseño en puntos de quiebre móvil y contempla movimiento reducido; las vistas usan etiquetas semánticas, estados accesibles y controles etiquetados. |
+| 5. Consultas con Laravel y Eloquent | Relaciones y ámbitos de acceso en `app/Models`; vistas con `with()` y listados paginados. Los gráficos agrupan litros y promedian lecturas en la base de datos en `InicioController` y `EstadisticaController`, en vez de cargar todo el historial a PHP. |
+| 6. Funcionalidad y requisitos | Registro de riegos, alertas, estadísticas, sistemas, lecturas de prueba, historial y administración; flujos principales cubiertos por `tests/Feature`. No se afirma control real de hardware: las órdenes y lecturas se indican como no conectadas o de prueba. |
+| 7. Pruebas relacionadas con seguridad | `AccesoTest` comprueba autenticación, cuentas inactivas y autorización administrativa; `RiegoTest` comprueba aislamiento de datos y escape de contenido HTML; `SistemaRiegoTest` comprueba que no se consulten sistemas ajenos. Las rutas web conservan middleware CSRF de Laravel y el chatbot tiene límite de solicitudes. |
+| 8. Claridad del informe | Este README documenta instalación, configuración, límites de hardware, migraciones y pruebas, además de mapear la evidencia por indicador. |
+| 9. Acceso para diferentes usuarios | Registro e inicio de sesión para usuarios; middleware `admin` reserva administración y gestión de cuentas; ámbitos `visiblesPara()` separan datos de cada cuenta y los administradores pueden consultar datos globales. |
+| 10. Presentación profesional del dashboard | `resources/views/inicio.blade.php` presenta indicadores, consumo gráfico, sistemas, actividad reciente y accesos rápidos; `resources/views/admin/index.blade.php` muestra indicadores y actividad para administración. |
+
+### Ejecutar y revisar las pruebas
+
+Desde la carpeta del proyecto, ejecuta `php artisan test tests/Feature`. Las pruebas de acceso y autorización incluyen intentos con roles o recursos ajenos; las de riego verifican validación, alertas y que una observación con etiquetas `<script>` se renderice escapada; las de sistemas verifican permisos, validación de lecturas y agregaciones de estadísticas. Estas pruebas no sustituyen una auditoría de seguridad ni demuestran compatibilidad con dispositivos físicos.
+
 ## Estructura
 
 - `routes/web.php`

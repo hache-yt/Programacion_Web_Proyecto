@@ -20,7 +20,6 @@
 </div>
 </article>
 @foreach ([
-    'nivel_agua' => ['Nivel de agua', $unidadNivel],
     'humedad_suelo' => ['Humedad del suelo', '%'],
     'temperatura' => ['Temperatura ambiente', '°C'],
     'humedad_ambiental' => ['Humedad ambiental', '%'],

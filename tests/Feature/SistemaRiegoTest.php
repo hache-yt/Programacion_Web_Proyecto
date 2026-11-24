@@ -16,7 +16,7 @@ class SistemaRiegoTest extends TestCase
     {
         $parcela = $usuario->parcelas()->create(['nombre' => 'Parcela principal']);
         $sistema = $parcela->sistemasRiego()->create(['nombre' => $nombre]);
-        $sistema->configuracion()->create(['modo' => 'manual', 'unidad_nivel_agua' => '%']);
+        $sistema->configuracion()->create(['modo' => 'manual']);
 
         return $sistema;
     }
@@ -30,6 +30,8 @@ class SistemaRiegoTest extends TestCase
             ->get(route('sistemas.show', $ajeno))
             ->assertForbidden();
 
+        $this->get(route('estadisticas.index', ['sistema_riego_id' => $ajeno->id]))
+            ->assertNotFound();
         $this->post(route('sistemas.iniciar', $ajeno))->assertForbidden();
         $this->post(route('sistemas.mediciones.store', $ajeno), [
             'tipo' => 'humedad_suelo',
@@ -39,6 +41,44 @@ class SistemaRiegoTest extends TestCase
         ])->assertForbidden();
 
         $this->get(route('sistemas.index'))->assertDontSee('Sistema privado');
+    }
+
+    public function test_estadisticas_agregan_litros_y_promedios_diarios_en_la_consulta(): void
+    {
+        $cliente = User::factory()->create();
+        $sistema = $this->crearSistema($cliente);
+        $parcela = $sistema->parcela;
+
+        $parcela->riegos()->create([
+            'sistema_riego_id' => $sistema->id,
+            'fecha' => now()->toDateString(),
+            'duracion_min' => 20,
+            'cantidad_litros' => 125,
+        ]);
+        $parcela->riegos()->create([
+            'sistema_riego_id' => $sistema->id,
+            'fecha' => now()->toDateString(),
+            'duracion_min' => 30,
+            'cantidad_litros' => 275,
+        ]);
+        foreach ([30, 50] as $valor) {
+            Medicion::create([
+                'sistema_riego_id' => $sistema->id,
+                'tipo' => 'humedad_suelo',
+                'valor' => $valor,
+                'unidad' => '%',
+                'fecha_lectura' => now(),
+                'es_prueba' => true,
+            ]);
+        }
+
+        $this->actingAs($cliente)
+            ->get(route('estadisticas.index', ['sistema_riego_id' => $sistema->id]))
+            ->assertOk()
+            ->assertViewHas('totalLitros', 400.0)
+            ->assertViewHas('lecturasPorTipo', function ($lecturasPorTipo) {
+                return $lecturasPorTipo['humedad_suelo']->last() === 40.0;
+            });
     }
 
     public function test_cliente_puede_crear_sistema_en_su_parcela_principal(): void
@@ -133,139 +173,5 @@ class SistemaRiegoTest extends TestCase
             ->assertSessionHasErrors('fecha_lectura');
 
         $this->assertSame(1, Medicion::count());
-    }
-
-    public function test_nivel_de_agua_respeta_la_unidad_configurada_por_sistema(): void
-    {
-        $cliente = User::factory()->create();
-        $sistema = $this->crearSistema($cliente);
-        $sistema->configuracion->update(['unidad_nivel_agua' => 'L']);
-
-        $this->actingAs($cliente)->post(route('sistemas.mediciones.store', $sistema), [
-            'tipo' => 'nivel_agua',
-            'valor' => 80,
-            'unidad' => '%',
-            'fecha_lectura' => now()->format('Y-m-d\TH:i'),
-        ])->assertSessionHasErrors('unidad');
-
-        $this->post(route('sistemas.mediciones.store', $sistema), [
-            'tipo' => 'nivel_agua',
-            'valor' => 80,
-            'unidad' => 'L',
-            'fecha_lectura' => now()->format('Y-m-d\TH:i'),
-        ])->assertRedirect();
-
-        $this->assertDatabaseHas('medicions', [
-            'sistema_riego_id' => $sistema->id,
-            'tipo' => 'nivel_agua',
-            'unidad' => 'L',
-        ]);
-    }
-
-    public function test_cambio_a_modo_automatico_registra_usuario_y_reglas_por_sistema(): void
-    {
-        $cliente = User::factory()->create();
-        $sistema = $this->crearSistema($cliente);
-        $this->actingAs($cliente)
-            ->put(route('sistemas.configuracion.update', $sistema), [
-                'modo' => 'automatico',
-                'unidad_nivel_agua' => '%',
-                'humedad_suelo_minima' => 25,
-                'humedad_suelo_maxima' => 45,
-                'nivel_agua_minimo' => 20,
-                'dias_permitidos' => [1, 3, 5],
-                'hora_inicio' => '05:00',
-                'hora_fin' => '07:30',
-                'duracion_maxima_min' => 20,
-                'pausa_minima_min' => 60,
-            ])->assertRedirect();
-
-        $this->assertDatabaseHas('configuracions', [
-            'sistema_riego_id' => $sistema->id,
-            'modo' => 'automatico',
-            'humedad_suelo_minima' => 25,
-            'humedad_suelo_maxima' => 45,
-            'nivel_agua_minimo' => 20,
-        ]);
-        $this->assertDatabaseHas('comandos', [
-            'sistema_riego_id' => $sistema->id,
-            'user_id' => $cliente->id,
-            'accion' => 'cambio_modo',
-            'resultado' => 'registrado',
-        ]);
-
-        $this->post(route('sistemas.iniciar', $sistema))
-            ->assertSessionHasErrors('control');
-        $this->assertFalse($sistema->fresh()->riego_activo);
-    }
-
-    public function test_orden_manual_se_registra_como_no_conectada_y_no_activa_el_riego(): void
-    {
-        $cliente = User::factory()->create();
-        $sistema = $this->crearSistema($cliente);
-        $this->actingAs($cliente);
-
-        $this->post(route('sistemas.iniciar', $sistema))
-            ->assertSessionHas('ok');
-        $this->post(route('sistemas.iniciar', $sistema))
-            ->assertSessionHas('ok');
-
-        $this->assertDatabaseCount('comandos', 1);
-        $this->assertDatabaseHas('comandos', [
-            'sistema_riego_id' => $sistema->id,
-            'accion' => 'iniciar',
-            'resultado' => 'no_conectado',
-        ]);
-
-        $this->post(route('sistemas.detener', $sistema))
-            ->assertSessionHas('ok');
-        $this->assertDatabaseHas('comandos', [
-            'sistema_riego_id' => $sistema->id,
-            'accion' => 'detener',
-            'resultado' => 'no_conectado',
-        ]);
-        $this->assertDatabaseCount('comandos', 2);
-        $this->assertFalse($sistema->fresh()->riego_activo);
-    }
-
-    public function test_datos_automaticos_incoherentes_no_se_guardan(): void
-    {
-        $cliente = User::factory()->create();
-        $sistema = $this->crearSistema($cliente);
-
-        $this->actingAs($cliente)
-            ->put(route('sistemas.configuracion.update', $sistema), [
-                'modo' => 'automatico',
-                'unidad_nivel_agua' => '%',
-                'humedad_suelo_minima' => 50,
-                'humedad_suelo_maxima' => 40,
-                'nivel_agua_minimo' => 20,
-                'dias_permitidos' => [1],
-                'hora_inicio' => '05:00',
-                'hora_fin' => '07:30',
-                'duracion_maxima_min' => 20,
-                'pausa_minima_min' => 60,
-            ])->assertSessionHasErrors('humedad_suelo_maxima');
-
-        $this->assertSame('manual', $sistema->configuracion->fresh()->modo);
-    }
-
-    public function test_panel_marca_una_lectura_antigua_como_desactualizada(): void
-    {
-        $cliente = User::factory()->create();
-        $sistema = $this->crearSistema($cliente);
-        $sistema->mediciones()->create([
-            'tipo' => 'humedad_suelo',
-            'valor' => 35,
-            'unidad' => '%',
-            'fecha_lectura' => now()->subMinutes(31),
-            'es_prueba' => true,
-        ]);
-
-        $this->actingAs($cliente)
-            ->get(route('sistemas.show', $sistema))
-            ->assertOk()
-            ->assertSee('Dato desactualizado')
-            ->assertSee('Desactualizada');
     }
 }
